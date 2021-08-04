@@ -2,6 +2,8 @@ import math
 import glob
 import threading
 
+import cv2
+import numpy as np
 from PIL import Image
 import tqdm
 
@@ -96,6 +98,7 @@ class TiledImageMaker:
         self.keepRatio = True
 
     def getCanvas(self):
+        print((self.refImage.width * self.tile_w, self.refImage.height * self.tile_h))
         return Image.new("RGB", (self.refImage.width * self.tile_w, self.refImage.height * self.tile_h))
 
     def _prep_reference_image(self):
@@ -108,11 +111,11 @@ class TiledImageMaker:
     def generate(self, quadNo=2,save_dir="./out.png"):
         self._prep_reference_image()
         canvas = self.getCanvas()
+        originalSize = canvas.size
         self.tiles.prepTiles()
 
-        quadCanvasSize = (math.ceil(canvas.width / quadNo), math.ceil(canvas.height / quadNo))
-
         quadRefSize = (math.ceil(self.refImage.width / quadNo), math.ceil(self.refImage.height / quadNo))
+        quadCanvasSize = (quadRefSize[0]*self.tile_w,quadRefSize[1]*self.tile_h)
 
         print(f"Quad Size | Canvas:{quadCanvasSize} Reference {quadRefSize}")
 
@@ -131,4 +134,5 @@ class TiledImageMaker:
             [i.start() for i in threads]
             [i.join() for i in threads]
 
+        print(canvas.size)
         canvas.save(save_dir)
