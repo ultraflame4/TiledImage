@@ -4,6 +4,7 @@ import threading
 
 from PIL import Image
 import tqdm
+from numba import jit, prange
 
 
 def resizeImage(image: Image.Image, w, h, keepRatio=True):
@@ -127,10 +128,12 @@ class TiledImageMaker:
                                      CanvasQuad(x,y,quadCanvasSize,canvas),(self.tile_w,self.tile_h))
                 self.quads.append(quad)
 
-        with tqdm.tqdm(total=self.refImage.width*self.refImage.height,desc=f"Progress [size:{self.refImage.size}]") as pbar:
+        total_iterations = quadRefSize[0] * quadRefSize[1] * quadNo * quadNo
+        with tqdm.tqdm(total=total_iterations,desc=f"Progress [size:{self.refImage.size}]") as pbar:
             threads = [threading.Thread(target=i.run,args=(pbar,)) for i in self.quads]
             [i.start() for i in threads]
             [i.join() for i in threads]
 
         print(canvas.size)
         canvas.save(save_dir)
+

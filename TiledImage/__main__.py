@@ -3,7 +3,9 @@ from PIL import Image
 
 import TiledImage as TM
 
-def commandLine_generate(refPath,saveDir,tilesDir,downsize=True,keepRatio=True,quads=4):
+def commandLine_generate(refPath,saveDir,tilesDir,downsize=True,keepRatio=True,quads=4,processes=1):
+    max_processes=8
+    processes=min(max_processes,processes)
     t = TM.TiledImageMaker(TM.loadImagesFromFolder(tilesDir),Image.open(refPath))
     t.downsample=downsize
     t.keepRatio=keepRatio
