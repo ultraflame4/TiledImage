@@ -15,3 +15,4 @@ Install with pip : `pip install git+https://github.com/ultraflame4/TiledImage.gi
 - downsize : Scales down reference image, improves performances Default : True
 - keepRatio : Maintain ration when scaling down Default : True
 - quads : Number of threads . Default : 4
+- scale : Custom scaling. Applied before downsizing. Default: 1
