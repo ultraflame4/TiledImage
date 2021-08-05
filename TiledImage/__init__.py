@@ -108,13 +108,11 @@ class TiledImageMaker:
     def generate(self, quadNo=2,save_dir="./out.png",save=True):
         self._prep_reference_image()
         canvas = self.getCanvas()
-        originalSize = canvas.size
         self.tiles.prepTiles()
 
         quadRefSize = (math.ceil(self.refImage.width / quadNo), math.ceil(self.refImage.height / quadNo))
         quadCanvasSize = (quadRefSize[0]*self.tile_w,quadRefSize[1]*self.tile_h)
 
-        print(f"Quad Size | Canvas:{quadCanvasSize} Reference {quadRefSize}")
 
         for y in range(quadNo):
             for x in range(quadNo):
@@ -125,17 +123,12 @@ class TiledImageMaker:
                                      quadIm,
                                      CanvasQuad(x,y,quadCanvasSize,canvas),(self.tile_w,self.tile_h))
                 self.quads.append(quad)
-        print("FFF")
         total_iterations = quadRefSize[0] * quadRefSize[1] * quadNo * quadNo
         with tqdm.tqdm(total=total_iterations,desc=f"Progress [size:{self.refImage.size}]") as pbar:
             threads = [threading.Thread(target=i.run,args=(pbar,)) for i in self.quads]
             [i.start() for i in threads]
             [i.join() for i in threads]
 
-        print(canvas.size)
-
-        if save == False:
-            return canvas
-        else:
-            canvas.save(save_dir)
+        print("Saving...")
+        canvas.save(save_dir)
 
