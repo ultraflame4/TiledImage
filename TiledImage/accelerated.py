@@ -1,7 +1,9 @@
 """
 This module contains stuff that tiles and generates the tiled image faster
 """
+import cmath
 import glob
+import math
 from typing import Literal
 
 import cv2
@@ -10,6 +12,7 @@ import numpy as np
 import numpy.typing
 import tqdm
 import numba as nb
+from numba import cuda
 
 from TiledImage import others
 
@@ -55,7 +58,34 @@ def CPU_compute(refImage: np.ndarray, outImage: np.ndarray, tileAvgVals: np.ndar
         outImage[ny:ny + tileShape[0], nx:nx + tileShape[1]] = tiles[tileIndex][0]
 
 
-def generate(refPath, savePath, tilesDir, compute: Literal["cpu", "gpu"] = "cpu", downscale=True):
+@cuda.jit()
+def GPU_compute(refImage: np.ndarray, outImage: np.ndarray, tileAvgVals: np.ndarray, tiles: np.ndarray,
+                tileShape: tuple):
+    x, y = cuda.grid(2)
+    refPixel = refImage[y, x]
+    nx, ny = x * tileShape[1], y * tileShape[0]
+
+    tileIndex = 0
+    distance = 1000
+    for i in nb.prange(tileAvgVals.shape[0]):
+        c = tileAvgVals[i]
+        dist = math.sqrt(
+            (c[0] - refPixel[0]) ** 2 + (c[1] - refPixel[1] ) ** 2 + (c[2] - refPixel[2]) ** 2)
+        if dist < distance:
+            distance = dist
+            tileIndex = i
+
+    c = outImage[ny:ny + tileShape[0], nx:nx + tileShape[1]]
+    # print(tiles[tileIndex].shape[0],tiles[tileIndex].shape[1],tiles[tileIndex].shape[2],"\n",c.shape[0],c.shape[1],c.shape[2])
+    t = tiles[tileIndex]
+
+    for ty in range(t.shape[0]):
+        for tx in range(t.shape[1]):
+            for channel in range(3):
+                outImage[ny + ty:ny + ty + 1, nx + tx:nx + tx + 1,channel] = t[ty, tx, channel]
+
+
+def generate(refPath, savePath, tilesDir, compute: Literal["numba-cpu", "numba-gpu"] = "numba-cpu", downscale=True):
     """
 
     :param refPath: Image reference path
@@ -75,17 +105,21 @@ def generate(refPath, savePath, tilesDir, compute: Literal["cpu", "gpu"] = "cpu"
                                          round(refImage.shape[0] / t.shape[0]))
                               )
     outImage = np.zeros((refImage.shape[0] * t.shape[0], refImage.shape[1] * t.shape[1], 3))
-    others.printImageOutputDetails(savePath,outImage.shape[1],outImage.shape[0])
-    if compute == "cpu":
+    others.printImageOutputDetails(savePath, outImage.shape[1], outImage.shape[0])
+    if compute == "numba-cpu":
         print("Beginning tiling...")
         CPU_compute(refImage, outImage, avgVals, tiles, t.shape)
         print("Finished.")
 
-    elif compute == "gpu":
+    elif compute == "numba-gpu":
         print("Warning: Only CUDA GPUs are supported. The CUDA toolkit must also be installed."
               " Get CUDA toolkit from: https://developer.nvidia.com/cuda-toolkit")
 
-        print("\n There currently isnt any gpu support. Please do not use this mode.")
+        threadsPerBlock = 8
+        dimBlock = (threadsPerBlock, threadsPerBlock, 1)
+        dimGrid = (math.ceil(refImage.shape[1] / threadsPerBlock), math.ceil(refImage.shape[0] / threadsPerBlock))
+
+        GPU_compute[dimGrid, dimBlock](refImage, outImage, avgVals, tiles, t.shape)
     else:
         print("Error. Invalid compute option", compute)
         exit(-10)

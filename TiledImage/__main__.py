@@ -14,7 +14,7 @@ def commandLine_generate(refPath,saveDir,tilesDir,downsize=True,keepRatio=True,q
 
 
     if compute_mode!="old":
-        accelerated.generate(refPath, saveDir, tilesDir,downscale=downsize)
+        accelerated.generate(refPath, saveDir, tilesDir,downscale=downsize,compute=compute_mode)
         return
 
     im:Image.Image=Image.open(refPath)
