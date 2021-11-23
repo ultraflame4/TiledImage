@@ -35,7 +35,7 @@ def computeTileAverageValues(tiles: np.ndarray):
     return avgToTile, tiles
 
 
-@numba.jit(nopython=True, parallel=True)
+@numba.jit(nopython=True, parallel=True,nogil=True)
 def roundColorToNearestAvailable(color: np.ndarray, availableColors: np.ndarray) -> int:
     distances = np.zeros(availableColors.shape[0])
     for i in nb.prange(availableColors.shape[0]):
