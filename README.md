@@ -27,4 +27,3 @@ Install with pip : `pip install git+https://github.com/ultraflame4/TiledImage.gi
       - quads and scale flags will be ignored
       - Only supported on CUDA GPUs
       - CUDA toolkit must be installed
-      - Currently not available
