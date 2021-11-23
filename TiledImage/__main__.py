@@ -6,7 +6,7 @@ import TiledImage as TM
 from TiledImage import accelerated
 
 
-def commandLine_generate(refPath,saveDir,tilesDir,downsize=True,keepRatio=True,quads=4,scale=1,compute_mode:Literal["old","numba-cpu","numba-gpu"]="numba-cpu"):
+def commandLine_generate(refPath,saveDir,tilesDir,downsize=True,keepRatio=True,quads=4,scale=1,compute_mode:Literal["old","numba-cpu","numba-gpu"]="old"):
     print(f"Tiled Image:\n Using compute mode: {compute_mode}. \nDownsize Set to {downsize}")
     if not downsize:
         print("Warning: Not downsizing the image will cause the image to be very big!!")
