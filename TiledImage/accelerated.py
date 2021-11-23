@@ -35,7 +35,7 @@ def computeTileAverageValues(tiles: np.ndarray):
     return avgToTile, tiles
 
 
-@numba.jit(nopython=True, parallel=True,nogil=True)
+@numba.jit(nopython=True, parallel=True)
 def roundColorToNearestAvailable(color: np.ndarray, availableColors: np.ndarray) -> int:
     distances = np.zeros(availableColors.shape[0])
     for i in nb.prange(availableColors.shape[0]):
@@ -44,7 +44,7 @@ def roundColorToNearestAvailable(color: np.ndarray, availableColors: np.ndarray)
     return np.where(distances == min(distances))[0]
 
 
-# @numba.jit(nopython=True, parallel=True)
+@numba.jit(nopython=True, parallel=True, nogil=True)
 def CPU_compute(refImage: np.ndarray, outImage: np.ndarray, tileAvgVals: np.ndarray, tiles: np.ndarray,
                 tileShape: tuple):
     for y, x in nb.pndindex(refImage.shape[:2]):
