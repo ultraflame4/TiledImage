@@ -115,7 +115,7 @@ def generate(refPath, savePath, tilesDir, compute: Literal["numba-cpu", "numba-g
         print("Warning: Only CUDA GPUs are supported. The CUDA toolkit must also be installed."
               " Get CUDA toolkit from: https://developer.nvidia.com/cuda-toolkit")
 
-        threadsPerBlock = 8
+        threadsPerBlock = 32
         dimBlock = (threadsPerBlock, threadsPerBlock, 1)
         dimGrid = (math.ceil(refImage.shape[1] / threadsPerBlock), math.ceil(refImage.shape[0] / threadsPerBlock))
 
