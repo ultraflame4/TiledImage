@@ -2,6 +2,12 @@
 
 This program, using a reference image, tiles images provided to create a new image.
 
+**Example:**
+
+![tiledimage0](https://user-images.githubusercontent.com/34125174/147404436-d5be34b1-4816-4005-95b6-adffdaad8307.png)
+
+Original image from https://wallpapercave.com/wp/wp2077533.jpg
+
 ### Install
 Python required
 Install with pip : `pip install git+https://github.com/ultraflame4/TiledImage.git`
