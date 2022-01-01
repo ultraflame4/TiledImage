@@ -1,6 +1,10 @@
-# TiledImage
+# TiledImage V2
 
-This program, using a reference image, tiles images provided to create a new image.
+This is the second version of tiled image. There will be major command option changes.
+
+This program creates an image, from many different sets of images.
+How does it work?
+It uses a reference image, which will be the
 
 ### Install
 Python required

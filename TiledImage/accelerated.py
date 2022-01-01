@@ -84,28 +84,8 @@ def GPU_compute(refImage: np.ndarray, outImage: np.ndarray, tileAvgVals: np.ndar
             for channel in range(3):
                 outImage[ny + ty:ny + ty + 1, nx + tx:nx + tx + 1,channel] = t[ty, tx, channel]
 
+def processImages(compute, refImage, outImage, avgVals,tiles,t):
 
-def generate(refPath, savePath, tilesDir, compute: Literal["numba-cpu", "numba-gpu"] = "numba-cpu", downscale=True):
-    """
-
-    :param refPath: Image reference path
-    :param savePath: Path to sace output to.
-    :param tilesDir: images to use for tiling
-    :param compute: compute option. Whether to use gpu or cpu for computation
-    :param downscale: Whether to downscale reference image so that output image is about the same size
-    :return:
-    """
-
-    rawtiles = loadTiles(tilesDir)
-    avgVals, tiles = computeTileAverageValues(rawtiles)
-    t = rawtiles[0]
-    refImage: np.ndarray = cv2.imread(refPath)
-    if downscale:
-        refImage = cv2.resize(refImage, (round(refImage.shape[1] / t.shape[1]),
-                                         round(refImage.shape[0] / t.shape[0]))
-                              )
-    outImage = np.zeros((refImage.shape[0] * t.shape[0], refImage.shape[1] * t.shape[1], 3))
-    others.printImageOutputDetails(savePath, outImage.shape[1], outImage.shape[0])
     if compute == "numba-cpu":
         print("Beginning tiling...")
         CPU_compute(refImage, outImage, avgVals, tiles, t.shape)
@@ -124,5 +104,31 @@ def generate(refPath, savePath, tilesDir, compute: Literal["numba-cpu", "numba-g
         print("Error. Invalid compute option", compute)
         exit(-10)
 
+
+
+def generate(refPath, savePath, tilesDir, compute: Literal["numba-cpu", "numba-gpu"] = "numba-cpu", downscale=True):
+    """
+
+    :param refPath: Image reference path
+    :param savePath: Path to sace output to.
+    :param tilesDir: images to use for tiling
+    :param compute: compute option. Whether to use gpu or cpu for computation
+    :param downscale: Whether to downscale reference image so that output image is about the same size
+    :return:
+    """
+
+    rawtiles = loadTiles(tilesDir)
+    avgVals, tiles = computeTileAverageValues(rawtiles)
+    t = rawtiles[0]
+    refImage: np.ndarray = cv2.imread(refPath)
+
+    if downscale:
+        refImage = cv2.resize(refImage, (round(refImage.shape[1] / t.shape[1]),
+                                         round(refImage.shape[0] / t.shape[0]))
+                              )
+    outImage = np.zeros((refImage.shape[0] * t.shape[0], refImage.shape[1] * t.shape[1], 3))
+    others.printImageOutputDetails(savePath, outImage.shape[1], outImage.shape[0])
+
+    processImages(compute, refImage, outImage, avgVals, tiles, t)
     cv2.imwrite(savePath, outImage)
     print("Saved output to", savePath)
