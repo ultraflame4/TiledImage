@@ -27,8 +27,8 @@ def compute_avg_tile_vals(tiles: np.ndarray, outarray: np.ndarray):
             ])
 
 
-def normal_compute(refImage: np.ndarray, outImage: np.ndarray, tileAvgVals: np.ndarray, tiles: np.ndarray,
-                   tileShape: tuple):
+def normal_compute(refImage: np.ndarray,dummyout:np.ndarray, tileAvgVals: np.ndarray, tiles: np.ndarray,
+                   tileShape: np.ndarray,outImage: np.ndarray):
 
     def getDist(a:np.ndarray,b:np.ndarray):
         return math.sqrt((float(a[0]) - float(b[0])) ** 2 +
@@ -54,8 +54,13 @@ def normal_compute(refImage: np.ndarray, outImage: np.ndarray, tileAvgVals: np.n
                     outImage[ny + ty:ny + ty + 1, nx + tx:nx + tx + 1, channel] = t[ty, tx, channel]
 
 
+cpu_compute = nb.guvectorize([(uint8[:,:,:],uint8[:,:,:],uint8[:,:],uint8[:,:,:,:],uint8[:],uint8[:,:,:])],"(a,b,c),(x,y,z),(d,e),(f,g,h,i),(j)->(x,y,z)")(normal_compute)
+
 def generate(reference_path: str, tilesdir: str, output_path: str, timeit: bool = False, max_memory: int = 2048,
-             scale_down=True, compute: core.c_option = "normal", verbose: bool = False):
+             scale_down=True, compute: core.c_option = "cpu", verbose: bool = False):
+
+    now =time.time()
+
     ti = core.TiledImageGenerate()
     ti.flags = core.OptionFlags(reference_path, tilesdir, output_path, timeit, max_memory, compute)
 
@@ -120,7 +125,8 @@ def generate(reference_path: str, tilesdir: str, output_path: str, timeit: bool 
                 ref_slice.shape[1] * sample_tile.shape[1],
                 3
                 ), dtype=np.uint8)
-            normal_compute(ref_slice, ti.working_canvas, ti.average_tile_vals, ti.tiles, sample_tile.shape)
+
+            cpu_compute(ref_slice,ti.working_canvas, ti.average_tile_vals, ti.tiles, np.array(sample_tile.shape,dtype=np.uint8), ti.working_canvas)
             # paste onto canvas
 
             ti.canvas[
@@ -128,5 +134,6 @@ def generate(reference_path: str, tilesdir: str, output_path: str, timeit: bool 
             x * ti.working_canvas.shape[1]:x * ti.working_canvas.shape[1] + ti.working_canvas.shape[1]] = ti.working_canvas
             bar.update()
 
+    print("Generation time:",time.time()-now,"ms")
     cv2.imwrite(ti.flags.OUT_PATH,ti.canvas)
     print("Saved results to", ti.flags.OUT_PATH)

@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 from tqdm import tqdm
 
-c_option = Literal["normal","cpu","cuda"]
+c_option = Literal["python","cpu","cuda"]
 @dataclasses.dataclass()
 class OptionFlags:
     REF_PATH: str
@@ -14,7 +14,7 @@ class OptionFlags:
     OUT_PATH: str
     TIMEIT: bool = False
     MAX_MEMORY: int = 2048
-    COMPUTE_OPTION: c_option = "normal"
+    COMPUTE_OPTION: c_option = "python"
 
 
 

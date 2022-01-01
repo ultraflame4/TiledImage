@@ -22,7 +22,7 @@ from TiledImage import core
 @click.option("--scale-down/--no-scale", "scale_down", default=True,
               help="Scales down reference image so that output image is about the same size as the original reference image."
                    "Warning: Setting this to False will result in higher memory comsumption. The max memory may need to be increased.")
-@click.option("-c", "--compute-mode", "compute", default="normal",
+@click.option("-c", "--compute-mode", "compute", default="cpu",
               help="Sets how the computation is done.                                                 "
                    "Options: 'normal','cpu','cuda'.                                                   "
                    "normal -> computation is done as normal. no speedups.                             "
@@ -45,7 +45,7 @@ def commandLine_generate(reference_path: str, tilesdir: str, output_path: str, t
     TM.generate(reference_path, tilesdir, output_path, timeit, max_memory, scale_down, compute,verbose)
 
     if timeit:
-        print(f"Time taken: {time.time() - now}ms")
+        print(f"Total Time taken: {time.time() - now}ms")
 
 
 if __name__ == "__main__":
