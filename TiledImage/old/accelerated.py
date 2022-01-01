@@ -1,7 +1,6 @@
 """
 This module contains stuff that tiles and generates the tiled image faster
 """
-import cmath
 import glob
 import math
 from typing import Literal
@@ -9,12 +8,11 @@ from typing import Literal
 import cv2
 import numba
 import numpy as np
-import numpy.typing
 import tqdm
 import numba as nb
 from numba import cuda
 
-from TiledImage import others
+from TiledImage.old import others
 
 
 def loadTiles(path: str) -> np.ndarray:
