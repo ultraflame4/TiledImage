@@ -1,16 +1,4 @@
-# TiledImage V2
+# TiledImage V3
 
-This is the second version of tiled image. There will be major command option changes.
+This program composites many images into one big image using a set of images and a reference image
 
-This program creates an image, from many different sets of images.
-How does it work?
-It uses a reference image, which will be the
-
-### Install
-Python required
-Install with pip : `pip install git+https://github.com/ultraflame4/TiledImage.git`
-
-### Usage
-**Command**
-
-wip
