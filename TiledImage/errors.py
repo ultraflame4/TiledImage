@@ -1,0 +1,2 @@
+class UnexpectedImageShapeError(Exception):
+    pass
