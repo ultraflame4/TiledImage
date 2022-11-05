@@ -1,15 +1,28 @@
 import os
 from pathlib import Path
 
+import numpy as np
 from PIL import Image
+import cv2
 
 import TiledImage as tm
 
-tiles,tile_shape = tm.load_imageset(Path("./assets/tiles"))
-atlas = tm.create_tiles_atlas(tiles,tile_shape)
 os.makedirs("./build/",exist_ok=True)
+tiles,tile_shape = tm.load_imageset(Path("./assets/tiles"))
+
+# atlas = tm.create_tiles_atlas(tiles,tile_shape)
 # Image.fromarray(atlas).save("./build/atlas.png")
 
 referenceImage = tm.load_image(Path("./assets/blackhole1.jpg"),resize=1/max(tile_shape),silent=False)
+
+
+print(referenceImage.shape,tiles.shape)
+
 # Image.fromarray(referenceImage).save("./build/ref.png")
-tm.tile_withreference(referenceImage,atlas,tile_shape)
+
+
+# r = tiles[0].reshape((tile_shape[0]*tile_shape[1],tile_shape[2]))
+# print(r.mean(axis=0))
+
+image = tm.generate_singlechannel(referenceImage, tiles, tile_shape)
+Image.fromarray(image).save("./build/out.png")
