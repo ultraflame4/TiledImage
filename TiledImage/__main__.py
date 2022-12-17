@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import numpy as np
@@ -25,6 +26,8 @@ def main(
         process_type: ProcessType = typer.Option(ProcessType.guvectorize,
                                                  help="Type of processing to use. Default: guvectorize. WARNING njit IS EXTREMELY SLOW"),
 ):
+    os.makedirs("./build/", exist_ok=True)
+
     tiles, tile_shape = TiledImage.load_imageset(Path(), tileset_glob)
 
     if isinstance(resize_factor, str):
