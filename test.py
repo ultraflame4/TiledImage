@@ -8,7 +8,7 @@ import cv2
 import TiledImage as tm
 
 os.makedirs("./build/",exist_ok=True)
-tiles,tile_shape = tm.load_imageset(Path("./assets/tiles"))
+tiles,tile_shape = tm.load_imageset(Path(),"./assets/tiles/*.png")
 
 # atlas = tm.create_tiles_atlas(tiles,tile_shape)
 # Image.fromarray(atlas).save("./build/atlas.png")

@@ -12,7 +12,7 @@ import numba as nb
 from TiledImage.errors import UnexpectedImageShapeError
 from TiledImage.utils import ClockTimer
 
-
+nb.warnings.simplefilter('ignore', category=nb.NumbaDeprecationWarning)
 def load_image(path: Path, resize: Union[float, tuple[int, int]] = 1, keep_ratio: bool = True,
                silent=True) -> np.ndarray:
     """
