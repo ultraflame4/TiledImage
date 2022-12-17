@@ -131,11 +131,7 @@ def manual_shape_correction(arr: np.ndarray):
     return image
 
 
-@nb.guvectorize([(nb.uint8[:],
-                  nb.float64[:,:],
-                  nb.int64[:])],
-                "(x),(a,b)->(x)", nopython=True, target="parallel")
-def tile_pixel_compare(refPixel: np.ndarray, tiles_avg: np.ndarray, out: int):
+def _tile_pixel_compare(refPixel: np.ndarray, tiles_avg: np.ndarray, out: int):
     nearest_tile_index:nb.int64 = 0
     nearest_distance = -1
     c:nb.int64 = 0
@@ -151,7 +147,15 @@ def tile_pixel_compare(refPixel: np.ndarray, tiles_avg: np.ndarray, out: int):
 
     out[:] = nearest_tile_index
 
+tile_pixel_compare= nb.guvectorize([(nb.uint8[:],
+                  nb.float64[:,:],
+                  nb.int64[:])],
+                "(x),(a,b)->(x)", nopython=True, target="parallel")(_tile_pixel_compare)
 
+tile_pixel_compare_cuda= nb.guvectorize([(nb.uint8[:],
+                  nb.float64[:,:],
+                  nb.int64[:])],
+                "(x),(a,b)->(x)", nopython=True, target="cuda")(_tile_pixel_compare)
 
 
 def compute_tiles_avg(tiles: np.ndarray) -> np.ndarray:
@@ -251,7 +255,7 @@ def draw_final_results_gu(closest_matches: np.ndindex, tiles: np.ndarray, tile_s
     return canvas
 
 
-def generate_tiledimage_gu(reference: np.ndarray, tiles: np.ndarray, tile_shape: tuple[int]) -> np.ndarray:
+def generate_tiledimage_gu(reference: np.ndarray, tiles: np.ndarray, tile_shape: tuple[int],useCuda=False) -> np.ndarray:
     """
     Generates a single channel image from a reference image and a set of tiles
 
@@ -261,6 +265,7 @@ def generate_tiledimage_gu(reference: np.ndarray, tiles: np.ndarray, tile_shape:
     :param channel: Which pixel channel to use, 0=Red, 1=Green, 2=Blue, 3=Alpha
     :return:
     """
+    print("Generating using numba's @guvectorize() !")
     tile_shape=np.asarray(tile_shape)
 
     clock = ClockTimer()
@@ -271,7 +276,10 @@ def generate_tiledimage_gu(reference: np.ndarray, tiles: np.ndarray, tile_shape:
     print("[1/3]. Completed in", clock.getTimeSince(), "s")
 
     print("[2/3]. Comparing tiles and pixels...")
-    result = tile_pixel_compare(reference,avg_tiles)
+    if useCuda:
+        result = tile_pixel_compare_cuda(reference, avg_tiles)
+    else:
+        result = tile_pixel_compare(reference, avg_tiles)
     print("[2/3]. Completed in", clock.getTimeSince(), "s")
 
     print("[3/3]. Drawing final results ...")
