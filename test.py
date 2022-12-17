@@ -14,7 +14,7 @@ tiles,tile_shape = tm.load_imageset(Path("./assets/tiles"))
 # Image.fromarray(atlas).save("./build/atlas.png")
 
 referenceImage = tm.load_image(Path("./assets/blackhole1.jpg"),resize=1/max(tile_shape),silent=False)
-referenceImage = tm.load_image(Path("./assets/blackhole1.jpg"),silent=False)
+# referenceImage = tm.load_image(Path("./assets/blackhole1.jpg"),silent=False)
 
 
 print(referenceImage.shape,tiles.shape)

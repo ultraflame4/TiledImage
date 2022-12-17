@@ -1,3 +1,5 @@
+__version__ = "3.0.0"
+
 import math
 import time
 from pathlib import Path
