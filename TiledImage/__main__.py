@@ -19,19 +19,19 @@ class ProcessType(str, enum.Enum):
 
 def main(
         reference_imagepath: Path = typer.Argument(..., help="Path to reference image"),
-        tileset_glob: str = typer.Argument(..., help="Glob Path to reference image. Eg: ./assets/tiles/*.png"),
         out_path: Path = typer.Argument(..., help="Path to save the final result to. ./out.png"),
-        resize_factor: float = typer.Option("auto",
-                                            help="Resize factor for reference image, so that the final image is not too big. Default: auto (resizes based on tile size)"),
+        tileset_paths: list[Path] = typer.Argument(..., help="Path to images used as tiles. Eg: './assets/tiles/*.png' or './assets/tiles/a.png ./assets/tiles/n.png' ..."),
+        resize_factor: float = typer.Option(-1,
+                                            help="Resize factor for reference image, so that the final image is not too big. Default: -1 (resizes based on tile size)"),
         process_type: ProcessType = typer.Option(ProcessType.guvectorize,
                                                  help="Type of processing to use. Default: guvectorize. WARNING njit IS EXTREMELY SLOW"),
 ):
     os.makedirs("./build/", exist_ok=True)
 
-    tiles, tile_shape = TiledImage.load_imageset(Path(), tileset_glob)
+    tiles, tile_shape = TiledImage.load_imageset(Path(),"",tileset_paths)
 
-    if isinstance(resize_factor, str):
-        if resize_factor.lower() == "auto":
+    if resize_factor < 0:
+        if resize_factor == -1:
             resize_factor = 1 / max(tile_shape)
         else:
             typer.echo(f"Invalid resize_factor: {resize_factor}")
@@ -50,6 +50,8 @@ def main(
         typer.echo("Using default process type guvectorize...")
         image = TiledImage.generate_tiledimage_gu(referenceImage, tiles, tile_shape, useCuda=False)
 
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    typer.echo(f"Saving result to {out_path}")
     Image.fromarray(image).save(out_path)
 
 

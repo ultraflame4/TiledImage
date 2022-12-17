@@ -45,19 +45,24 @@ def load_image(path: Path, resize: Union[float, tuple[int, int]] = 1, keep_ratio
     return np.asarray(im)
 
 
-def load_imageset(imageSetDirectory: Path, glob: str = "*.png") -> tuple[np.ndarray, tuple[int]]:
+def load_imageset(imageSetDirectory: Path, glob: str = "*.png",image_paths=Union[None,list[Path]]) -> tuple[np.ndarray, tuple[int]]:
     """
     Load all images in a directory and return a list of images
-    :param imageSetDirectory:
+
+    :param imageSetDirectory: The directory to load images from
+    :param glob: The glob to use when loading images
+    :param image_paths: The path to al the images. when not none, will ignore imageSetDirectory and glob and use this instead
     :return:
     """
-    if not imageSetDirectory.exists():
-        raise FileNotFoundError(f"Path {imageSetDirectory} does not exist")
-    if not imageSetDirectory.is_dir():
-        raise FileNotFoundError(f"{imageSetDirectory} is not a directory")
+    if image_paths is None:
+        if not imageSetDirectory.exists():
+            raise FileNotFoundError(f"Path {imageSetDirectory} does not exist")
+        if not imageSetDirectory.is_dir():
+            raise FileNotFoundError(f"{imageSetDirectory} is not a directory")
 
-    print(f"\nLoading image set from directory '{imageSetDirectory}/{glob}'")
-    image_paths = list(imageSetDirectory.glob(glob))
+        print(f"\nLoading image set from directory '{imageSetDirectory}/{glob}'")
+        image_paths = list(imageSetDirectory.glob(glob))
+
     tqdm_ = tqdm.tqdm(image_paths, desc="Loading image set")
     image_set = []
     image_shape = None
