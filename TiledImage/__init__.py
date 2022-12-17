@@ -105,26 +105,6 @@ def create_tiles_atlas(imageSet: list[np.ndarray], shape: tuple[int]) -> np.ndar
     return atlas
 
 
-@nb.guvectorize([(nb.uint8, nb.uint8[:, :, :], nb.int64[:], nb.uint8[:, :], nb.uint8[:, :])],
-                "(),(a,b,c),(s),(e,f)->(e,f)", nopython=True, target="parallel")
-def tile_pixel_compare(refPixel: np.ndarray, tiles: np.ndarray, tile_shape: np.ndarray, canvas_: np.ndarray,
-                       out: np.ndarray) -> np.ndarray:
-    nearest_tile_index = 0
-    nearest_distance = -1
-    c = 0
-    for t in tiles:
-        tile_mean = np.mean(t)
-        distance = abs(tile_mean - refPixel)
-
-        if nearest_distance == -1 or distance < nearest_distance:
-            nearest_distance = distance
-            nearest_tile_index = c
-        c += 1
-    # print(tiles[nearest_tile_index])
-    out[:, :] = tiles[nearest_tile_index]
-    pass
-
-
 def manual_shape_correction(arr: np.ndarray):
     """
     Manually corrects the shape of the numpy array returned by tile_pixel_compare.
@@ -134,44 +114,44 @@ def manual_shape_correction(arr: np.ndarray):
     :param arr: Array to correct. Has to have 5 dimensions
     :return:
     """
-    if len(arr.shape) != 4:
-        raise ValueError(f"Array must have 4 dimensions, not {len(arr.shape)}")
 
-    width = arr.shape[0] * arr.shape[2]
-    height = arr.shape[1] * arr.shape[3]
-    image = np.zeros((width, height), dtype=np.uint8)
+    if len(arr.shape) != 6:
+        raise ValueError(f"Array must have 6 dimensions, not {len(arr.shape)}")
+
+    width = arr.shape[0] * arr.shape[3]
+    height = arr.shape[1] * arr.shape[4]
+    image = np.zeros((width, height,4), dtype=np.uint8)
+    print(image.shape,arr.shape,flush=True)
     _tqdm = tqdm.tqdm(np.ndindex(arr.shape[:2]), total=arr.shape[0] * arr.shape[1], desc="Correcting shape")
-
     for ix, iy in _tqdm:
-        x = ix * arr.shape[2]
-        y = iy * arr.shape[3]
-        image[x:x + arr.shape[2], y:y + arr.shape[3]] = arr[ix, iy]
+        x = ix * arr.shape[3]
+        y = iy * arr.shape[4]
+        image[x:x + arr.shape[3], y:y + arr.shape[4],:] = arr[ix, iy,3]
 
     return image
 
 
-def generate_singlechannel(reference_: np.ndarray, tiles_: np.ndarray, tile_shape: tuple[int], channel=0) -> np.ndarray:
-    """
-    Generates a single channel image from a reference image and a set of tiles
+@nb.guvectorize([(nb.uint8[:],
+                  nb.float64[:,:],
+                  nb.int64[:])],
+                "(x),(a,b)->(x)", nopython=True, target="parallel")
+def tile_pixel_compare(refPixel: np.ndarray, tiles_avg: np.ndarray, out: int):
+    nearest_tile_index:nb.int64 = 0
+    nearest_distance = -1
+    c:nb.int64 = 0
+    # print("a",refPixel.shape)
+    for t in tiles_avg:
 
-    :param reference_: A 3D numpy array representing the reference image
-    :param tiles_: An 4D numpy array representing the tiles. Aka, and array of images
-    :param tile_shape: Shape of a single tile
-    :param channel: Which pixel channel to use, 0=Red, 1=Green, 2=Blue, 3=Alpha
-    :return:
-    """
-    print(f"Generating single channel ({channel}) image from reference image...")
-    reference = reference_[:, :, channel]
-    tiles = tiles_[:, :, :, channel]
+        distance = (refPixel[0] - t[0])**2+(refPixel[1] - t[1])**2+(refPixel[2] - t[2])**2
 
-    canvasShape = (reference.shape[0] * tile_shape[0], reference.shape[1] * tile_shape[1])
-    print(
-        f"\tWill expect result of shape: {canvasShape} with tile shape {tile_shape} and reference shape {reference.shape}")
+        if nearest_distance == -1 or distance < nearest_distance:
+            nearest_distance = distance
+            nearest_tile_index = c
+        c += 1
 
-    result = tile_pixel_compare(reference, tiles, np.asarray(tile_shape), np.zeros(tile_shape[:2], dtype=np.uint8))
-    print(f"\tReshaping result of shape {result.shape} to {canvasShape}")
-    # return canvas
-    return manual_shape_correction(result)
+    out[:] = nearest_tile_index
+
+
 
 
 def compute_tiles_avg(tiles: np.ndarray) -> np.ndarray:
@@ -184,6 +164,7 @@ def compute_tiles_avg(tiles: np.ndarray) -> np.ndarray:
 
     return np.mean(tiles, axis=(1, 2))
 
+
 @nb.njit(fastmath=True, parallel=True)
 def compute_tileAvg_vs_referencePixel(pixel: np.ndarray, tilesPixelsAvg: np.ndarray) -> int:
     """
@@ -194,14 +175,16 @@ def compute_tileAvg_vs_referencePixel(pixel: np.ndarray, tilesPixelsAvg: np.ndar
     """
     closest_tile_index = 0
     closest_tile_dist = -1
-    index=0
+    index = 0
     for tile in tilesPixelsAvg:
         _dist = np.linalg.norm(pixel - tile)
         if closest_tile_dist == -1 or _dist < closest_tile_dist:
             closest_tile_dist = _dist
             closest_tile_index = index
-        index+=1
+        index += 1
     return closest_tile_index
+
+
 @nb.njit(fastmath=True, parallel=True)
 def computeClosestTilePixelMatches(reference: np.ndarray, tilesAvg: np.ndarray) -> np.ndarray:
     """
@@ -214,7 +197,7 @@ def computeClosestTilePixelMatches(reference: np.ndarray, tilesAvg: np.ndarray) 
 
     h = reference.shape[0]
     w = reference.shape[1]
-    l = h*w
+    l = h * w
 
     for i in nb.prange(l):
         x = i % w
@@ -227,9 +210,11 @@ def computeClosestTilePixelMatches(reference: np.ndarray, tilesAvg: np.ndarray) 
 
     return closest_matches
 
+
 @nb.njit(fastmath=True, parallel=True)
-def draw_final_results(closest_matches:np.ndindex, tiles:np.ndarray, tile_shape:np.ndarray) -> np.ndarray:
-    canvas = np.zeros((closest_matches.shape[0] * tile_shape[0], closest_matches.shape[1] * tile_shape[1], 4), dtype=np.uint8)
+def draw_final_results(closest_matches: np.ndindex, tiles: np.ndarray, tile_shape: np.ndarray) -> np.ndarray:
+    canvas = np.zeros((closest_matches.shape[0] * tile_shape[0], closest_matches.shape[1] * tile_shape[1], 4),
+                      dtype=np.uint8)
     h = closest_matches.shape[0]
     w = closest_matches.shape[1]
     l = h * w
@@ -237,15 +222,63 @@ def draw_final_results(closest_matches:np.ndindex, tiles:np.ndarray, tile_shape:
     for i in nb.prange(l):
         x = i % w
         y = i // w
+
         canvas[
         y * tile_shape[0]:(y + 1) * tile_shape[0],
         x * tile_shape[1]:(x + 1) * tile_shape[1],
-        :] = tiles[closest_matches[y, x]]
+        :
+        ] = tiles[closest_matches[y, x]]
 
+    return canvas
+@nb.njit(fastmath=True, parallel=True)
+def draw_final_results_gu(closest_matches: np.ndindex, tiles: np.ndarray, tile_shape: np.ndarray) -> np.ndarray:
+    canvas = np.zeros((closest_matches.shape[0] * tile_shape[0], closest_matches.shape[1] * tile_shape[1], 4),
+                      dtype=np.uint8)
+    h = closest_matches.shape[0]
+    w = closest_matches.shape[1]
+    l = h * w
+
+    for i in nb.prange(l):
+        x = i % w
+        y = i // w
+
+        canvas[
+        y * tile_shape[0]:(y + 1) * tile_shape[0],
+        x * tile_shape[1]:(x + 1) * tile_shape[1],
+        :
+        ] = tiles[closest_matches[y, x][0]]
 
     return canvas
 
 
+def generate_tiledimage_gu(reference: np.ndarray, tiles: np.ndarray, tile_shape: tuple[int]) -> np.ndarray:
+    """
+    Generates a single channel image from a reference image and a set of tiles
+
+    :param reference: A 3D numpy array representing the reference image
+    :param tiles: An 4D numpy array representing the tiles. Aka, and array of images
+    :param tile_shape: Shape of a single tile
+    :param channel: Which pixel channel to use, 0=Red, 1=Green, 2=Blue, 3=Alpha
+    :return:
+    """
+    tile_shape=np.asarray(tile_shape)
+
+    clock = ClockTimer()
+    clock.start()
+
+    print("[1/3]. Computing tiles average (mean)...")
+    avg_tiles = compute_tiles_avg(tiles)
+    print("[1/3]. Completed in", clock.getTimeSince(), "s")
+
+    print("[2/3]. Comparing tiles and pixels...")
+    result = tile_pixel_compare(reference,avg_tiles)
+    print("[2/3]. Completed in", clock.getTimeSince(), "s")
+
+    print("[3/3]. Drawing final results ...")
+    final = draw_final_results_gu(result, tiles, tile_shape)
+    print("[3/3]. Completed in", clock.getTimeSince(), "s")
+
+    return final
 
 def generate_tiledimage(reference: np.ndarray, tiles: np.ndarray, tile_shape: tuple[int]) -> np.ndarray:
     """
@@ -256,22 +289,22 @@ def generate_tiledimage(reference: np.ndarray, tiles: np.ndarray, tile_shape: tu
     :param tile_shape:
     :return:
     """
-    clock = ClockTimer()
 
+    clock = ClockTimer()
     clock.start()
+
 
     print("[1/3]. Computing tiles average (mean)...")
     avg_vals = compute_tiles_avg(tiles)
-    print(avg_vals.shape)
-    print("[1/3]. Finished Computing tiles average (mean)... in", clock.getTimeSince(), "s")
+    print("[1/3]. Completed in", clock.getTimeSince(), "s")
 
     print("[2/3]. Computing closest tile-pixel matches ...")
     pixelTileMatches = computeClosestTilePixelMatches(reference, avg_vals)
-    print("[2/3]. Finished closest tile-pixel matches ... in", clock.getTimeSince(), "s")
+    print("[2/3]. Completed in", clock.getTimeSince(), "s")
 
     print("[3/3]. Drawing final results ...")
-    final = draw_final_results(pixelTileMatches, tiles,tile_shape)
-    print("[3/3]. Finished closest tile-pixel matches ... in", clock.getTimeSince(), "s")
+    final = draw_final_results(pixelTileMatches, tiles, tile_shape)
+    print("[3/3]. Completed in", clock.getTimeSince(), "s")
     return final
     # channels_count = 3
     # i_ = tqdm.tqdm(range(4), desc="Generating channels")
