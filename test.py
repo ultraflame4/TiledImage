@@ -1,10 +1,6 @@
 import os
 from pathlib import Path
-
-import numpy as np
 from PIL import Image
-import cv2
-
 import TiledImage as tm
 
 os.makedirs("./build/",exist_ok=True)
