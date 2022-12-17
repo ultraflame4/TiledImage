@@ -17,7 +17,7 @@ class ProcessType(str, enum.Enum):
     cuda = "cuda"
 
 
-def main(
+def tiledImage_cli(
         reference_imagepath: Path = typer.Argument(..., help="Path to reference image"),
         out_path: Path = typer.Argument(..., help="Path to save the final result to. ./out.png"),
         tileset_paths: list[Path] = typer.Argument(..., help="Path to images used as tiles. Eg: './assets/tiles/*.png' or './assets/tiles/a.png ./assets/tiles/n.png' ..."),
@@ -51,10 +51,15 @@ def main(
         image = TiledImage.generate_tiledimage_gu(referenceImage, tiles, tile_shape, useCuda=False)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    typer.echo(f"Saving result to {out_path}")
+    typer.echo(f"Saving result to {out_path}...")
     Image.fromarray(image).save(out_path)
+    typer.echo(f"Saved")
 
+
+def main():
+    print("# TiledImage version:", TiledImage.__version__)
+
+    typer.run(tiledImage_cli)
 
 if __name__ == "__main__":
-    print("# TiledImage version:", TiledImage.__version__)
-    typer.run(main)
+    main()
