@@ -28,5 +28,5 @@ print(referenceImage.shape,tiles.shape)
 # image = tm.generate_tiledimage(referenceImage, tiles, tile_shape)
 # Image.fromarray(image).save("./build/out1.png")
 
-image = tm.generate_tiledimage_gu(referenceImage, tiles, tile_shape,useCuda=True)
+image = tm.generate_tiledimage_gu(referenceImage, tiles, tile_shape)
 Image.fromarray(image).save("./build/out2.png")

@@ -266,6 +266,8 @@ def generate_tiledimage_gu(reference: np.ndarray, tiles: np.ndarray, tile_shape:
     :return:
     """
     print("Generating using numba's @guvectorize() !")
+    if useCuda:
+        print("Using Nvidia's CUDA!!!")
     tile_shape=np.asarray(tile_shape)
 
     clock = ClockTimer()
@@ -273,18 +275,19 @@ def generate_tiledimage_gu(reference: np.ndarray, tiles: np.ndarray, tile_shape:
 
     print("[1/3]. Computing tiles average (mean)...")
     avg_tiles = compute_tiles_avg(tiles)
-    print("[1/3]. Completed in", clock.getTimeSince(), "s")
+    print("[1/3]. Completed in", clock.getTimeSinceLast(), "s")
 
     print("[2/3]. Comparing tiles and pixels...")
     if useCuda:
         result = tile_pixel_compare_cuda(reference, avg_tiles)
     else:
         result = tile_pixel_compare(reference, avg_tiles)
-    print("[2/3]. Completed in", clock.getTimeSince(), "s")
+    print("[2/3]. Completed in", clock.getTimeSinceLast(), "s")
 
     print("[3/3]. Drawing final results ...")
     final = draw_final_results_gu(result, tiles, tile_shape)
-    print("[3/3]. Completed in", clock.getTimeSince(), "s")
+    print("[3/3]. Completed in", clock.getTimeSinceLast(), "s")
+    print("[///]. Total time taken", clock.getTimeSinceStart(), "s")
 
     return final
 
@@ -304,15 +307,16 @@ def generate_tiledimage(reference: np.ndarray, tiles: np.ndarray, tile_shape: tu
 
     print("[1/3]. Computing tiles average (mean)...")
     avg_vals = compute_tiles_avg(tiles)
-    print("[1/3]. Completed in", clock.getTimeSince(), "s")
+    print("[1/3]. Completed in", clock.getTimeSinceLast(), "s")
 
     print("[2/3]. Computing closest tile-pixel matches ...")
     pixelTileMatches = computeClosestTilePixelMatches(reference, avg_vals)
-    print("[2/3]. Completed in", clock.getTimeSince(), "s")
+    print("[2/3]. Completed in", clock.getTimeSinceLast(), "s")
 
     print("[3/3]. Drawing final results ...")
     final = draw_final_results(pixelTileMatches, tiles, tile_shape)
-    print("[3/3]. Completed in", clock.getTimeSince(), "s")
+    print("[3/3]. Completed in", clock.getTimeSinceLast(), "s")
+    print("[///]. Total time taken", clock.getTimeSinceStart(), "s")
     return final
     # channels_count = 3
     # i_ = tqdm.tqdm(range(4), desc="Generating channels")
