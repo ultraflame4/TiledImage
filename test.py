@@ -24,5 +24,5 @@ print(referenceImage.shape,tiles.shape)
 # r = tiles[0].reshape((tile_shape[0]*tile_shape[1],tile_shape[2]))
 # print(r.mean(axis=0))
 
-image = tm.generate_singlechannel(referenceImage, tiles, tile_shape)
+image = tm.generate_tiledimage(referenceImage, tiles, tile_shape)
 Image.fromarray(image).save("./build/out.png")
