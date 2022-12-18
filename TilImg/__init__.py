@@ -1,4 +1,4 @@
-__version__ = "3.1.1"
+__version__ = "3.1.2"
 
 import numpy as np
 import numba as nb
