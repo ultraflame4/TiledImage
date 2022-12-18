@@ -20,8 +20,10 @@ class ClockTimer:
         self.last = self.start_
 
     def getTimeSinceLast(self):
-        self.last = time.perf_counter() - self.last
-        return self.last
+        now = time.perf_counter()
+        delta = now - self.last
+        self.last=now
+        return delta
 
     def getTimeSinceStart(self):
         return time.perf_counter() - self.start_
