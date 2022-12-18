@@ -110,7 +110,7 @@ def run_ffmpeg(progress: Progress,pattern: Path,save_path: Path="./out.mp4", fps
         progress.stop()
     finally:
         progress.print(f"ffmpeg outputs:\n{results.stderr.decode()}")
-        progress.print(f"ffmpeg return code:\n{results.returncode}")
+        progress.print(f"ffmpeg return code: {results.returncode}")
 
 
 def video_cli(
