@@ -78,7 +78,7 @@ def generate_tiledimage_video(reference_video: Video, tiles: np.ndarray, tile_sh
         save_filepath = Path(f"./build/frames/{reference_video.path.name}_{index}.png")
         if save_filepath.exists():
             if progress:
-                progress.print(f"[yellow]Skipping {save_filepath} as it already exists")
+                progress.print(f"[yellow]Skipping frame #{index}/{reference_video.TotalFramesCount-1} as it already exists at {save_filepath.absolute()}")
                 progress.advance(overallProcessTask, 1)
             index += 1
             continue
