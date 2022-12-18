@@ -7,7 +7,8 @@ from typing import Union
 import numpy as np
 import tqdm
 from PIL import Image
-from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.progress import Progress, SpinnerColumn, TextColumn, TimeRemainingColumn, BarColumn, MofNCompleteColumn, \
+    TimeElapsedColumn
 
 from TiledImage import UnexpectedImageShapeError
 
@@ -36,6 +37,10 @@ class SpinnerProgress(Progress):
         Progress.__init__(self, SpinnerColumn(finished_text=""), TextColumn("[progress.description]{task.description}"),
                           *args, **kwargs)
 
+def getProgressBar():
+    return Progress(SpinnerColumn(),"{task.description}", BarColumn(), MofNCompleteColumn(),
+                                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"), TimeElapsedColumn(),
+                                TimeRemainingColumn())
 
 def load_image(path: Path, resize: Union[float, tuple[int, int]] = 1, keep_ratio: bool = True,
                progress:Union[Progress,None]=None) -> np.ndarray:
@@ -124,7 +129,7 @@ def load_imageset(imageSetDirectory: Path, glob: str = "*.png", image_paths: Uni
         if progress:
             progress.update(task, description=f"Loading image set for tiles - {file.name}", advance=1)
     if progress:
-        progress.update(task, description=f"Loading image set for tiles - Done", advance=1)
+        progress.update(task, description=f"Loaded image set for tiles [Done]", advance=1)
     return np.array(image_set), image_shape
 
 

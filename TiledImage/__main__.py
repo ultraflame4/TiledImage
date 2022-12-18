@@ -5,11 +5,10 @@ import typer
 
 from PIL import Image
 from rich.live import Live
-from rich.progress import Progress, BarColumn, TextColumn
+from rich.progress import Progress, BarColumn, TextColumn, SpinnerColumn
 from rich.table import Table
 
 import TiledImage
-import TiledImage.utils
 from TiledImage import video
 from TiledImage.utils import ProcessType
 
@@ -25,18 +24,12 @@ def tiledImage_cli(
 ):
     os.makedirs("./build/", exist_ok=True)
 
-    overall_progress = Progress("{task.description}",BarColumn(),TextColumn("[progress.percentage]{task.percentage:>3.0f}%"))
-    overall_task = overall_progress.add_task("Generating Tiled Image...[Overall]", total=4)
-    load_image_progress = Progress("{task.description}",BarColumn(),TextColumn("[progress.percentage]{task.percentage:>3.0f}%"))
-    compute_progress = TiledImage.SpinnerProgress()
-    progress_table = Table.grid()
-    progress_table.add_row(load_image_progress)
-    progress_table.add_row(compute_progress)
-    progress_table.add_row(overall_progress)
+    overall_progress = TiledImage.utils.getProgressBar()
+    overall_task = overall_progress.add_task("Overall Progress", total=5)
 
-    with Live(progress_table, refresh_per_second=10, ):
+    with overall_progress:
 
-        tiles, tile_shape = TiledImage.utils.load_imageset(Path(), "", tileset_paths, progress=load_image_progress)
+        tiles, tile_shape = TiledImage.utils.load_imageset(Path(), "", tileset_paths, progress=overall_progress)
         overall_progress.advance(overall_task)
 
         if resize_factor < 0:
@@ -46,7 +39,7 @@ def tiledImage_cli(
                 typer.echo(f"Invalid resize_factor: {resize_factor}")
                 return
 
-        referenceImage = TiledImage.utils.load_image(reference_imagepath, resize=resize_factor, progress=load_image_progress)
+        referenceImage = TiledImage.utils.load_image(reference_imagepath, resize=resize_factor, progress=overall_progress)
         overall_progress.advance(overall_task)
 
         if process_type == ProcessType.njit:
@@ -54,18 +47,18 @@ def tiledImage_cli(
             image = TiledImage.generate_tiledimage(referenceImage, tiles, tile_shape)
         elif process_type == ProcessType.cuda:
             overall_progress.print("Using cuda process type!!!!! This only works on CUDA enabled GPUS !!!")
-            image = TiledImage.generate_tiledimage_gu(referenceImage, tiles, tile_shape, useCuda=True,progress=compute_progress)
+            image = TiledImage.generate_tiledimage_gu(referenceImage, tiles, tile_shape, useCuda=True,progress=overall_progress)
         else:
             overall_progress.print("Using default process type guvectorize...")
-            image = TiledImage.generate_tiledimage_gu(referenceImage, tiles, tile_shape, useCuda=False,progress=compute_progress)
+            image = TiledImage.generate_tiledimage_gu(referenceImage, tiles, tile_shape, useCuda=False,progress=overall_progress)
         overall_progress.advance(overall_task)
 
 
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        overall_progress.print(f"Saving result to {out_path}...")
+        overall_progress.update(overall_task,description="Overall Progress - Saving...", advance=1)
         Image.fromarray(image).save(out_path)
-        overall_progress.print(f"Saved")
-        overall_progress.advance(overall_task)
+        overall_progress.print(f"Saved output to {out_path}")
+        overall_progress.update(overall_task,description="Overall Progress - Finished", advance=1)
 
 
 def main():

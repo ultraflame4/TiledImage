@@ -3,7 +3,8 @@ from pathlib import Path
 from typing import Union
 
 from rich.live import Live
-from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn, TimeElapsedColumn, MofNCompleteColumn
+from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn, TimeElapsedColumn, MofNCompleteColumn, \
+    SpinnerColumn
 from rich.table import Table
 
 import TiledImage
@@ -87,12 +88,14 @@ def generate_tiledimage_video(reference_video: Video, tiles: np.ndarray, tile_sh
         Image.fromarray(tiled_frame).save(save_filepath)
         index += 1
 
-        progress.advance(overallProcessTask, 1)
+        if progress:
+            progress.advance(overallProcessTask, 1)
+
 
     if progress:
         progress.update(overallProcessTask, description=f"Finished processing {reference_video.path.name}",
                         total=index)
-
+        progress.print(f"Finished processing in {timer.getTimeSinceStart()}s")
 
 def video_cli(
         source_path: Path = typer.Argument(..., help="Path to source video to use as reference"),
@@ -104,20 +107,17 @@ def video_cli(
         process_type: ProcessType = typer.Option(ProcessType.guvectorize,
                                                  help="Type of processing to use. Default: guvectorize. njit IS not available for video")
 ):
-    overall_progress = Progress("{task.description}", BarColumn(), MofNCompleteColumn(),
-                                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"), TimeElapsedColumn(),
-                                TimeRemainingColumn())
+    overall_progress = TiledImage.utils.getProgressBar()
     overall_progress_task = overall_progress.add_task(f"Overall Progress", total=3)
 
-    progress_table = Table.grid()
-    progress_table.add_row(overall_progress)
+
 
     if process_type == ProcessType.njit:
         rich.print(
             f"[red]Invalid process type[/red]: {ProcessType.njit} is not available for video processing. Please use {ProcessType.guvectorize} or {ProcessType.cuda} instead.")
         return
 
-    with Live(progress_table, refresh_per_second=10, ):
+    with overall_progress:
         useCuda = process_type == ProcessType.cuda
 
         tiles, tile_shape = TiledImage.utils.load_imageset(Path(), "", tileset_paths, progress=overall_progress)
