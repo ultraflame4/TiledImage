@@ -102,7 +102,7 @@ def generate_tiledimage_video(reference_video: Video, tiles: np.ndarray, tile_sh
 def run_ffmpeg(progress: Progress,pattern: Path,save_path: Path="./out.mp4", fps: int=30):
     try:
 
-        results = subprocess.run(f"ffmpeg -framerate {fps} -hwaccel auto -i {pattern.absolute()} {save_path.absolute()}",
+        results = subprocess.run(f"ffmpeg -framerate {fps} -hwaccel auto -i \"{pattern.absolute()}\" \"{save_path.absolute()}\"",
                                  capture_output=True,
                                  input="y".encode())
     except Exception as e:
@@ -111,6 +111,10 @@ def run_ffmpeg(progress: Progress,pattern: Path,save_path: Path="./out.mp4", fps
     finally:
         progress.print(f"ffmpeg outputs:\n{results.stderr.decode()}")
         progress.print(f"ffmpeg return code: {results.returncode}")
+
+        if results.returncode != 0:
+            progress.print("[red]ffmpeg failed!")
+            progress.print(f"[yellow]Arguments: \n{results.args}")
 
 
 def video_cli(
