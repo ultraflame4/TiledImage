@@ -74,7 +74,7 @@ def main():
     print("# TiledImage version:", TiledImage.__version__)
     app.command(name="img",help="Generates a tiled image using a reference image and a set of images as tiles")(tiledImage_cli)
 
-    app.command(name="vid",help="Generates a tiled image video by converting all of its frames into a tiled image. Note that this currently only generates the iamges for the frames. Use ffmpeg to convert it into a playable video")(video.video_cli)
+    app.command(name="vid",help="Generates a tiled image video by converting all of its frames into a tiled image. Note that this currently only generates the images for the frames. Use ffmpeg to convert it into a playable video")(video.video_cli)
 
     app()
 
