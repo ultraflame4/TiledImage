@@ -1,5 +1,4 @@
 import enum
-import math
 import subprocess
 import time
 from pathlib import Path
@@ -8,7 +7,6 @@ from typing import Union
 import numpy as np
 
 from PIL import Image
-from rich.console    import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeRemainingColumn, BarColumn, MofNCompleteColumn, \
     TimeElapsedColumn
 
@@ -32,7 +30,6 @@ class ClockTimer:
     def getTimeSinceStart(self):
         return time.perf_counter() - self.start_
 
-console = Console(color_system="truecolor")
 
 class SpinnerProgress(Progress):
     def __init__(self, *args, **kwargs):
@@ -40,9 +37,9 @@ class SpinnerProgress(Progress):
                           *args, **kwargs)
 
 def getProgressBar():
-    return Progress(SpinnerColumn(),"{task.description}", BarColumn(finished_style="rgb(0,0,255)"), MofNCompleteColumn(),
+    return Progress(SpinnerColumn(),"{task.description}", BarColumn(), MofNCompleteColumn(),
                                 TextColumn("[progress.percentage]{task.percentage:>3.0f}%"), TimeElapsedColumn(),
-                                TimeRemainingColumn(),console=console)
+                                TimeRemainingColumn())
 
 def load_image(path: Path, resize: Union[float, tuple[int, int]] = 1, keep_ratio: bool = True,
                progress:Union[Progress,None]=None) -> np.ndarray:

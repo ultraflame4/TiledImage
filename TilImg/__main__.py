@@ -4,9 +4,6 @@ from pathlib import Path
 import typer
 
 from PIL import Image
-from rich.live import Live
-from rich.progress import Progress, BarColumn, TextColumn, SpinnerColumn
-from rich.table import Table
 
 import TilImg
 from TilImg import video
@@ -40,7 +37,7 @@ def tiledImage_cli(
                 return
 
         referenceImage = TilImg.utils.load_image(reference_imagepath, resize=resize_factor, progress=overall_progress)
-        overall_progress.print(f"[yellow]Final image resolution: {tiles.shape[1] * referenceImage.shape[1]}x{tiles.shape[0] * referenceImage.shape[0]}[/yellow]")
+        overall_progress.print(f"[yellow]Final image resolution: {tiles.shape[1] * referenceImage.shape[1]} x {tiles.shape[0] * referenceImage.shape[0]}[/yellow]")
         overall_progress.advance(overall_task)
 
         if process_type == ProcessType.njit:
@@ -64,7 +61,6 @@ def tiledImage_cli(
 
 def main():
     app = typer.Typer()
-    vidTyper = typer.Typer()
     print("# TilImg version:", TilImg.__version__)
     app.command(name="img",help="Generates a tiled image using a reference image and a set of images as tiles")(tiledImage_cli)
 

@@ -40,10 +40,10 @@ class Video:
 
     @property
     def width(self)->float:
-        return self.cap.get(cv2.CV_CAP_PROP_FRAME_WIDTH)
+        return self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     @property
     def height(self)->float:
-        return self.cap.get(cv2.CV_CAP_PROP_FRAME_HEIGHT)
+        return self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
     def getFrame(self) -> np.ndarray:
         while self.cap.isOpened():
@@ -151,7 +151,7 @@ def video_cli(
         tiles, tile_shape = TilImg.utils.load_imageset(Path(), "", tileset_paths, progress=overall_progress)
         overall_progress.advance(overall_progress_task, 1)
         video = TilImg.video.Video(source_path)
-        overall_progress.print(f"[yellow]Final video resolution: {tiles.shape[1]*video.width}x{tiles.shape[0]*video.height}")
+        overall_progress.print(f"[yellow]Final video resolution: {tiles.shape[1]*video.width} x {tiles.shape[0]*video.height}")
         TilImg.video.generate_tiledimage_video(video, tiles, tile_shape, useCuda=useCuda,
                                                resize_factor=resize_factor, progress=overall_progress)
         overall_progress.advance(overall_progress_task, 1)
