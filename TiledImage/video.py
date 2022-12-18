@@ -1,4 +1,5 @@
 import os
+import subprocess
 from pathlib import Path
 from typing import Union
 
@@ -66,6 +67,7 @@ def generate_tiledimage_video(reference_video: Video, tiles: np.ndarray, tile_sh
         progress.print(f"Video framerate count: {reference_video.Framerate}")
         progress.print(f"Will resize frames by a factor of {resize_factor}")
         progress.print(f"Tiles shape: {tiles.shape}")
+        progress.print(f"useCuda: {useCuda}")
 
     os.makedirs(Path("./build/frames"), exist_ok=True)
 
@@ -97,6 +99,20 @@ def generate_tiledimage_video(reference_video: Video, tiles: np.ndarray, tile_sh
                         total=index)
         progress.print(f"Finished processing in {timer.getTimeSinceStart()}s")
 
+def run_ffmpeg(progress: Progress,pattern: Path,save_path: Path="./out.mp4", fps: int=30):
+    try:
+
+        results = subprocess.run(f"ffmpeg -framerate {fps} -hwaccel auto -i {pattern.absolute()} {save_path.absolute()}",
+                                 capture_output=True,
+                                 input="y".encode())
+    except Exception as e:
+        progress.print(f"[red]Failed to run ffmpeg:\n{e}")
+        progress.stop()
+    finally:
+        progress.print(f"ffmpeg outputs:\n{results.stderr.decode()}")
+        progress.print(f"ffmpeg return code:\n{results.returncode}")
+
+
 def video_cli(
         source_path: Path = typer.Argument(..., help="Path to source video to use as reference"),
         save_path: Path = typer.Argument(..., help="Path to save the final result to. Eg ./out.png"),
@@ -108,7 +124,7 @@ def video_cli(
                                                  help="Type of processing to use. Default: guvectorize. njit IS not available for video")
 ):
     overall_progress = TiledImage.utils.getProgressBar()
-    overall_progress_task = overall_progress.add_task(f"Overall Progress", total=3)
+    overall_progress_task = overall_progress.add_task(f"Overall Progress", total=4)
 
 
 
@@ -126,3 +142,8 @@ def video_cli(
         TiledImage.video.generate_tiledimage_video(video, tiles, tile_shape, useCuda=useCuda,
                                                    resize_factor=resize_factor, progress=overall_progress)
         overall_progress.advance(overall_progress_task, 1)
+        utils.test_for_ffmpeg()
+        overall_progress.update(overall_progress_task, description="Overall Progress - waiting for ffmpeg...")
+        run_ffmpeg(overall_progress, Path(f"./build/frames/{source_path.name}_%d.png"), save_path, video.Framerate)
+        overall_progress.update(overall_progress_task, description="Overall Progress - Finished")
+        overall_progress.print(f"Saved to f{save_path.absolute()}")

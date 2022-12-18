@@ -1,5 +1,6 @@
 import enum
 import math
+import subprocess
 import time
 from pathlib import Path
 from typing import Union
@@ -190,3 +191,14 @@ class ProcessType(str, enum.Enum):
     njit = "njit",
     guvectorize = "guvectorize",
     cuda = "cuda"
+
+def test_for_ffmpeg():
+    """
+    Tests for ffmpeg in the path
+    :return:
+    """
+    try:
+        subprocess.run(["ffmpeg", "-version"], capture_output=True)
+    except FileNotFoundError:
+        raise FileNotFoundError("ffmpeg not found in path. Please install ffmpeg and add it to your path!")
+
