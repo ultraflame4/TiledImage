@@ -1,9 +1,11 @@
-__version__ = "3.0.1-dev-video"
+__version__ = "3.0.1-dev"
 
 import numpy as np
 import numba as nb
+from rich.progress import Progress, SpinnerColumn, TextColumn
+
 from TiledImage.errors import UnexpectedImageShapeError
-from TiledImage.utils import ClockTimer
+from TiledImage.utils import ClockTimer, SpinnerProgress
 
 nb.warnings.simplefilter('ignore', category=nb.NumbaDeprecationWarning)
 
@@ -132,7 +134,7 @@ def draw_final_results_gu(closest_matches: np.ndindex, tiles: np.ndarray, tile_s
     return canvas
 
 
-def generate_tiledimage_gu(reference: np.ndarray, tiles: np.ndarray, tile_shape: tuple[int],useCuda=False) -> np.ndarray:
+def generate_tiledimage_gu(reference: np.ndarray, tiles: np.ndarray, tile_shape: tuple[int],useCuda=False, progress:Progress=None) -> np.ndarray:
     """
     Generates a single channel image from a reference image and a set of tiles
 
@@ -142,29 +144,41 @@ def generate_tiledimage_gu(reference: np.ndarray, tiles: np.ndarray, tile_shape:
     :param channel: Which pixel channel to use, 0=Red, 1=Green, 2=Blue, 3=Alpha
     :return:
     """
-    print("Generating using numba's @guvectorize() !")
-    if useCuda:
-        print("Using Nvidia's CUDA!!!")
+
+    if progress:
+        progress.console.print("Generating using numba's @guvectorize() !")
+
+        if useCuda:
+            progress.console.print("Using Nvidia's CUDA!!!")
+
+
     tile_shape=np.asarray(tile_shape)
 
     clock = ClockTimer()
     clock.start()
 
-    print("[1/3]. Computing tiles average (mean)...")
-    avg_tiles = compute_tiles_avg(tiles)
-    print("[1/3]. Completed in", clock.getTimeSinceLast(), "s")
+    if progress:
+        avg_tiles_task = progress.add_task("[1/3] Computing tiles average (mean)...", total=1)
+        compare_task = progress.add_task("[2/3]. Comparing tiles and pixels...", total=1)
+        draw_task = progress.add_task("[3/3]. Drawing final results ...", total=1)
 
-    print("[2/3]. Comparing tiles and pixels...")
+    avg_tiles = compute_tiles_avg(tiles)
+    if progress:
+        progress.update(avg_tiles_task, advance=1, description=f"[1/3] Completed Computing tiles average (mean) in {clock.getTimeSinceLast()}s")
+
+
+
     if useCuda:
         result = tile_pixel_compare_cuda(reference, avg_tiles)
     else:
         result = tile_pixel_compare(reference, avg_tiles)
-    print("[2/3]. Completed in", clock.getTimeSinceLast(), "s")
 
-    print("[3/3]. Drawing final results ...")
+    if progress:
+        progress.update(compare_task, advance=1, description=f"[2/3] Completed comparing tiles and pixels in {clock.getTimeSinceLast()}s")
+
     final = draw_final_results_gu(result, tiles, tile_shape)
-    print("[3/3]. Completed in", clock.getTimeSinceLast(), "s")
-    print("[///]. Total time taken", clock.getTimeSinceStart(), "s")
+    if progress:
+        progress.update(compare_task, advance=1, description=f"[3/3] Draw completed in {clock.getTimeSinceLast()}s")
 
     return final
 
