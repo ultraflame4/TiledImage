@@ -20,12 +20,13 @@ class ClockTimer:
         self.last = self.start_
 
     def getTimeSinceLast(self):
-        self.last = time.perf_counter() - self.last
-        return self.last
+        now = time.perf_counter()
+        delta = now - self.last
+        self.last=now
+        return delta
 
     def getTimeSinceStart(self):
         return time.perf_counter() - self.start_
-
 
 def load_image(path: Path, resize: Union[float, tuple[int, int]] = 1, keep_ratio: bool = True,
                silent=True) -> np.ndarray:
@@ -39,7 +40,20 @@ def load_image(path: Path, resize: Union[float, tuple[int, int]] = 1, keep_ratio
     """
     im = Image.open(path).convert("RGBA")
     originalSize = im.size
+    im=resize_image(im,resize,keep_ratio)
+    if not silent:
+        print(f"Loaded image {path} with original size {originalSize} and resized to {im.size}")
 
+    return np.asarray(im)
+
+def resize_image(im: Image.Image, resize: Union[float, tuple[int, int]] = 1, keep_ratio: bool = True,) -> Image.Image:
+    """
+    Resizes an image to a given size
+    :param im: Image to resize
+    :param resize: Resizes image, if float, resizes by that factor. When tuple, is max size (will resize to below or equal)
+    :param keep_ratio: When resizing, whether to keep the aspect ratio. Does not apply when resizing by a float
+    :return:
+    """
     if resize != 1:
         if isinstance(resize, float):
             im = im.resize((int(im.width * resize), int(im.height * resize)), resample=Image.NEAREST)
@@ -53,13 +67,9 @@ def load_image(path: Path, resize: Union[float, tuple[int, int]] = 1, keep_ratio
         else:
             raise TypeError(f"resize must be a float or tuple, not {type(resize)}")
 
-    if not silent:
-        print(f"Loaded image {path} with original size {originalSize} and resized to {im.size}")
+    return im
 
-    return np.asarray(im)
-
-
-def load_imageset(imageSetDirectory: Path, glob: str = "*.png",image_paths=Union[None,list[Path]]) -> tuple[np.ndarray, tuple[int]]:
+def load_imageset(imageSetDirectory: Path, glob: str = "*.png",image_paths:Union[None,list[Path]]=None) -> tuple[np.ndarray, tuple[int]]:
     """
     Load all images in a directory and return a list of images
 
