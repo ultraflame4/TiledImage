@@ -28,7 +28,6 @@ class ClockTimer:
     def getTimeSinceStart(self):
         return time.perf_counter() - self.start_
 
-
 def load_image(path: Path, resize: Union[float, tuple[int, int]] = 1, keep_ratio: bool = True,
                silent=True) -> np.ndarray:
     """

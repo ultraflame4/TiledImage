@@ -37,7 +37,7 @@ class Video:
         self.cap.release()
 
 
-def generate_tiledimage_video(reference_video: Video, tiles: np.ndarray, tile_shape: tuple[int]):
+def generate_tiledimage_video(reference_video: Video, tiles: np.ndarray, tile_shape: tuple[int],useCuda=False):
 
     print(f"Generating tiled image from video with {reference_video.path}")
     print(f"Video frames count: {reference_video.TotalFramesCount}")
@@ -45,20 +45,24 @@ def generate_tiledimage_video(reference_video: Video, tiles: np.ndarray, tile_sh
     print(f"Tiles shape: {tiles.shape}")
     os.makedirs(Path("./build/frames"),exist_ok=True)
 
-
+    timer = ClockTimer()
+    timer.start()
     index = 0
+    print("\n"*64,end="")
     for frame in reference_video.getFrame():
+        print(f"{colorama.Cursor.POS(0,0)}{colorama.ansi.clear_line()}",end="")
         print(f"{colorama.Fore.CYAN}>>>> Processing {reference_video.path} Frame [{index}/{reference_video.TotalFramesCount}] >>>>{colorama.Fore.RESET}")
         save_filepath=Path(f"./build/frames/{index}.png")
         if save_filepath.exists():
             print(f"{colorama.Fore.YELLOW}>>>> Frame [{index}/{reference_video.TotalFramesCount}] already exits at {save_filepath}! Skipping... >>>>{colorama.Fore.RESET}")
+            index+=1
             continue
         print("Resizing frame...")
         frame = utils.resize_image(Image.fromarray(frame), 1 / max(tile_shape))
-        tiled_frame = generate_tiledimage_gu(np.asarray(frame), tiles, tile_shape)
+        tiled_frame = generate_tiledimage_gu(np.asarray(frame), tiles, tile_shape,useCuda)
         Image.fromarray(tiled_frame).save(save_filepath)
         index += 1
-        print(f"{colorama.Fore.GREEN}>>>>Finished {reference_video.path} Frame  [{index}/{reference_video.TotalFramesCount}] >>>>{colorama.Fore.RESET}")
+        print(f"{colorama.Fore.GREEN}>>>>Finished and Saved Frame {index}/{reference_video.TotalFramesCount} in {timer.getTimeSinceLast()}s>>>>{colorama.Fore.RESET}")
 
     print(f"{colorama.Fore.LIGHTGREEN_EX}>>>> Finished processing {reference_video.path} >>>>>{colorama.Fore.RESET}")
 
