@@ -85,7 +85,7 @@ def generate_tiledimage_video(reference_video: Video, tiles: np.ndarray, tile_sh
             index += 1
             continue
 
-        frame = utils.resize_image(Image.fromarray(frame), 1 / max(tile_shape))
+        frame = utils.resize_image(Image.fromarray(frame), resize_factor)
         tiled_frame = generate_tiledimage_gu(np.asarray(frame), tiles, tile_shape, useCuda)
         Image.fromarray(tiled_frame).save(save_filepath)
         index += 1
