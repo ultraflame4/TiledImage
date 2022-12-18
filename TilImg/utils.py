@@ -11,7 +11,7 @@ from PIL import Image
 from rich.progress import Progress, SpinnerColumn, TextColumn, TimeRemainingColumn, BarColumn, MofNCompleteColumn, \
     TimeElapsedColumn
 
-from TiledImage import UnexpectedImageShapeError
+from TilImg import UnexpectedImageShapeError
 
 
 class ClockTimer:

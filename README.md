@@ -1,4 +1,4 @@
-# TiledImage V3
+# TilImg V3
 This program composites many images into one big image using a set of images and a reference image
 ![results](https://user-images.githubusercontent.com/34125174/208235487-44f5e641-e6eb-453a-a9db-25d93a093782.png)
 [Generated from Photo by Pixabay from Pexels: https://www.pexels.com/photo/dock-under-cloudy-sky-in-front-of-mountain-206359/ )
@@ -19,7 +19,7 @@ Usage (Before v3.1.0): `timg REFERENCE_IMAGEPATH OUT_PATH`
 
 ##### Optional Arguments
 - --resize-factor: The factor by which to resize the reference image. Default is -1 (auto, resizes based on tile size. Final image resolution will stay mostly the same)
-- --process-type: TiledImage uses numba to speed up computation. This argument specifies the method used to do so. Default is guvectorize
+- --process-type: TilImg uses numba to speed up computation. This argument specifies the method used to do so. Default is guvectorize
   - guvectorize: Uses numba's guvectorize to speed up computation. This is the default method
   - njit: Uses numba's njit to speed up computation. This is known to be extremely slow
   - cuda: Also uses numba's guvectorize but targets CUDA-enabled GPUs. This is known to be slighly faster than guvectorize but requires a CUDA-enabled GPU AND has some overhead costs
@@ -39,7 +39,7 @@ Usage: `timg vid [OPTIONS] SOURCE_PATH SAVE_PATH TILESET_PATHS...`
 
 ##### Optional Arguments
 - --resize-factor: The factor by which to resize the reference image. Default is -1 (auto, resizes based on tile size. Final image resolution will stay mostly the same)
-- --process-type: TiledImage uses numba to speed up computation. This argument specifies the method used to do so. Default is guvectorize
+- --process-type: TilImg uses numba to speed up computation. This argument specifies the method used to do so. Default is guvectorize
   - guvectorize: Uses numba's guvectorize to speed up computation. This is the default method
   - ~~njit: Uses numba's njit to speed up computation. This is known to be extremely slow~~ Not available in video mode
   - cuda: Also uses numba's guvectorize but targets CUDA-enabled GPUs. This is known to be slighly faster than guvectorize but requires a CUDA-enabled GPU AND has some overhead costs

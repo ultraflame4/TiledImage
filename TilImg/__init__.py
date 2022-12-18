@@ -4,8 +4,8 @@ import numpy as np
 import numba as nb
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
-from TiledImage.errors import UnexpectedImageShapeError
-from TiledImage.utils import ClockTimer, SpinnerProgress
+from TilImg.errors import UnexpectedImageShapeError
+from TilImg.utils import ClockTimer, SpinnerProgress
 
 nb.warnings.simplefilter('ignore', category=nb.NumbaDeprecationWarning)
 

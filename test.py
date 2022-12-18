@@ -1,16 +1,16 @@
 import os
 from pathlib import Path
 from PIL import Image
-import TiledImage as tm
-import TiledImage.utils
+import TilImg as tm
+import TilImg.utils
 
 os.makedirs("./build/",exist_ok=True)
-tiles,tile_shape = TiledImage.utils.load_imageset(Path(), "./assets/tiles/*.png")
+tiles,tile_shape = TilImg.utils.load_imageset(Path(), "./assets/tiles/*.png")
 
 # atlas = tm.create_tiles_atlas(tiles,tile_shape)
 # Image.fromarray(atlas).save("./build/atlas.png")
 
-referenceImage = TiledImage.utils.load_image(Path("./assets/blackhole1.jpg"), resize=1 / max(tile_shape), silent=False)
+referenceImage = TilImg.utils.load_image(Path("./assets/blackhole1.jpg"), resize=1 / max(tile_shape), silent=False)
 # referenceImage = tm.load_image(Path("./assets/blackhole1.jpg"),silent=False)
 
 

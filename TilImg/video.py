@@ -8,7 +8,7 @@ from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn, 
     SpinnerColumn
 from rich.table import Table
 
-import TiledImage
+import TilImg
 import colorama
 import numpy
 import numpy as np
@@ -18,8 +18,8 @@ import tqdm
 import typer
 from PIL import Image
 
-from TiledImage import ClockTimer, generate_tiledimage_gu, utils
-from TiledImage.utils import ProcessType
+from TilImg import ClockTimer, generate_tiledimage_gu, utils
+from TilImg.utils import ProcessType
 
 
 class Video:
@@ -127,7 +127,7 @@ def video_cli(
         process_type: ProcessType = typer.Option(ProcessType.guvectorize,
                                                  help="Type of processing to use. Default: guvectorize. njit IS not available for video")
 ):
-    overall_progress = TiledImage.utils.getProgressBar()
+    overall_progress = TilImg.utils.getProgressBar()
     overall_progress_task = overall_progress.add_task(f"Overall Progress", total=4)
 
 
@@ -140,11 +140,11 @@ def video_cli(
     with overall_progress:
         useCuda = process_type == ProcessType.cuda
 
-        tiles, tile_shape = TiledImage.utils.load_imageset(Path(), "", tileset_paths, progress=overall_progress)
+        tiles, tile_shape = TilImg.utils.load_imageset(Path(), "", tileset_paths, progress=overall_progress)
         overall_progress.advance(overall_progress_task, 1)
-        video = TiledImage.video.Video(source_path)
-        TiledImage.video.generate_tiledimage_video(video, tiles, tile_shape, useCuda=useCuda,
-                                                   resize_factor=resize_factor, progress=overall_progress)
+        video = TilImg.video.Video(source_path)
+        TilImg.video.generate_tiledimage_video(video, tiles, tile_shape, useCuda=useCuda,
+                                               resize_factor=resize_factor, progress=overall_progress)
         overall_progress.advance(overall_progress_task, 1)
         utils.test_for_ffmpeg()
         overall_progress.update(overall_progress_task, description="Overall Progress - waiting for ffmpeg...",advance=1)
