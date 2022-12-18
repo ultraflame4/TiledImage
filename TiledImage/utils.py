@@ -6,6 +6,7 @@ from typing import Union
 import numpy as np
 import tqdm
 from PIL import Image
+from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from TiledImage import UnexpectedImageShapeError
 
@@ -22,14 +23,21 @@ class ClockTimer:
     def getTimeSinceLast(self):
         now = time.perf_counter()
         delta = now - self.last
-        self.last=now
+        self.last = now
         return delta
 
     def getTimeSinceStart(self):
         return time.perf_counter() - self.start_
 
+
+class SpinnerProgress(Progress):
+    def __init__(self, *args, **kwargs):
+        Progress.__init__(self, SpinnerColumn(finished_text=""), TextColumn("[progress.description]{task.description}"),
+                          *args, **kwargs)
+
+
 def load_image(path: Path, resize: Union[float, tuple[int, int]] = 1, keep_ratio: bool = True,
-               silent=True) -> np.ndarray:
+               progress:Union[Progress,None]=None) -> np.ndarray:
     """
     Load an image from a path
     :param path:
@@ -40,13 +48,14 @@ def load_image(path: Path, resize: Union[float, tuple[int, int]] = 1, keep_ratio
     """
     im = Image.open(path).convert("RGBA")
     originalSize = im.size
-    im=resize_image(im,resize,keep_ratio)
-    if not silent:
-        print(f"Loaded image {path} with original size {originalSize} and resized to {im.size}")
+    im = resize_image(im, resize, keep_ratio)
+    if progress:
+        progress.print(f"[green]Loaded reference image {path} with original size {originalSize} and resized to {im.size}")
 
     return np.asarray(im)
 
-def resize_image(im: Image.Image, resize: Union[float, tuple[int, int]] = 1, keep_ratio: bool = True,) -> Image.Image:
+
+def resize_image(im: Image.Image, resize: Union[float, tuple[int, int]] = 1, keep_ratio: bool = True, ) -> Image.Image:
     """
     Resizes an image to a given size
     :param im: Image to resize
@@ -69,7 +78,9 @@ def resize_image(im: Image.Image, resize: Union[float, tuple[int, int]] = 1, kee
 
     return im
 
-def load_imageset(imageSetDirectory: Path, glob: str = "*.png",image_paths:Union[None,list[Path]]=None) -> tuple[np.ndarray, tuple[int]]:
+
+def load_imageset(imageSetDirectory: Path, glob: str = "*.png", image_paths: Union[None, list[Path]] = None,
+                  progress: Union[Progress,None] = None) -> tuple[np.ndarray, tuple[int]]:
     """
     Load all images in a directory and return a list of images
 
@@ -78,34 +89,40 @@ def load_imageset(imageSetDirectory: Path, glob: str = "*.png",image_paths:Union
     :param image_paths: The path to al the images. when not none, will ignore imageSetDirectory and glob and use this instead
     :return:
     """
+
     if image_paths is None:
         if not imageSetDirectory.exists():
             raise FileNotFoundError(f"Path {imageSetDirectory} does not exist")
         if not imageSetDirectory.is_dir():
             raise FileNotFoundError(f"{imageSetDirectory} is not a directory")
 
-        print(f"\nLoading image set from directory '{imageSetDirectory}/{glob}'")
+        if progress:
+            progress.console.print(f"Loading image set from directory '{imageSetDirectory}/{glob}'")
+
         image_paths = list(imageSetDirectory.glob(glob))
 
-    tqdm_ = tqdm.tqdm(image_paths, desc="Loading image set")
+    if progress:
+        task = progress.add_task("Loading image set for tiles", total=len(image_paths))
+
     image_set = []
     image_shape = None
 
-    for file in tqdm_:
-        tqdm_.set_description(f"Loading {file.name}")
+    for file in image_paths:
+
         im = load_image(file)
 
         if image_shape is None:
             image_shape = im.shape
-            tqdm_.write(f"Using {file} image's shape as expected shape: {image_shape}")
+            if progress:
+                progress.console.print(f"Using {file} image's shape as expected shape: {image_shape}")
 
         if image_shape != im.shape:
             raise UnexpectedImageShapeError(f"Image {file} has shape {im.shape} but expected {image_shape}")
 
         image_set.append(im)
-
-    print("Successfully loaded image set\n")
-
+        if progress:
+            progress.update(task, description=f"Loading image set for tiles - {file.name}", advance=1)
+    progress.update(task, description=f"Loading image set for tiles - Done", advance=1)
     return np.array(image_set), image_shape
 
 
@@ -151,12 +168,12 @@ def manual_shape_correction(arr: np.ndarray):
 
     width = arr.shape[0] * arr.shape[3]
     height = arr.shape[1] * arr.shape[4]
-    image = np.zeros((width, height,4), dtype=np.uint8)
-    print(image.shape,arr.shape,flush=True)
+    image = np.zeros((width, height, 4), dtype=np.uint8)
+    print(image.shape, arr.shape, flush=True)
     _tqdm = tqdm.tqdm(np.ndindex(arr.shape[:2]), total=arr.shape[0] * arr.shape[1], desc="Correcting shape")
     for ix, iy in _tqdm:
         x = ix * arr.shape[3]
         y = iy * arr.shape[4]
-        image[x:x + arr.shape[3], y:y + arr.shape[4],:] = arr[ix, iy,3]
+        image[x:x + arr.shape[3], y:y + arr.shape[4], :] = arr[ix, iy, 3]
 
     return image

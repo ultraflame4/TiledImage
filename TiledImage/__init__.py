@@ -178,7 +178,7 @@ def generate_tiledimage_gu(reference: np.ndarray, tiles: np.ndarray, tile_shape:
 
     final = draw_final_results_gu(result, tiles, tile_shape)
     if progress:
-        progress.update(compare_task, advance=1, description=f"[3/3] Draw completed in {clock.getTimeSinceLast()}s")
+        progress.update(draw_task, advance=1, description=f"[3/3] Draw completed in {clock.getTimeSinceLast()}s")
 
     return final
 
