@@ -9,6 +9,7 @@ import enum
 from PIL import Image
 
 import TiledImage
+import TiledImage.utils
 
 
 class ProcessType(str, enum.Enum):
@@ -28,7 +29,7 @@ def tiledImage_cli(
 ):
     os.makedirs("./build/", exist_ok=True)
 
-    tiles, tile_shape = TiledImage.load_imageset(Path(),"",tileset_paths)
+    tiles, tile_shape = TiledImage.utils.load_imageset(Path(), "", tileset_paths)
 
     if resize_factor < 0:
         if resize_factor == -1:
@@ -37,7 +38,7 @@ def tiledImage_cli(
             typer.echo(f"Invalid resize_factor: {resize_factor}")
             return
 
-    referenceImage = TiledImage.load_image(reference_imagepath, resize=resize_factor, silent=False)
+    referenceImage = TiledImage.utils.load_image(reference_imagepath, resize=resize_factor, silent=False)
 
     if process_type == ProcessType.njit:
         typer.echo(
