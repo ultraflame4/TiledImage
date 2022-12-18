@@ -5,10 +5,13 @@ import colorama
 import numpy
 import numpy as np
 import cv2
+import rich
 import tqdm
+import typer
 from PIL import Image
 
 from TiledImage import ClockTimer, generate_tiledimage_gu, utils
+from TiledImage.utils import ProcessType
 
 
 class Video:
@@ -66,3 +69,18 @@ def generate_tiledimage_video(reference_video: Video, tiles: np.ndarray, tile_sh
 
     print(f"{colorama.Fore.LIGHTGREEN_EX}>>>> Finished processing {reference_video.path} >>>>>{colorama.Fore.RESET}")
 
+
+def video_cli(
+        source_path: Path = typer.Argument(..., help="Path to source video to use as reference"),
+        save_path: Path = typer.Argument(..., help="Path to save the final result to. Eg ./out.png"),
+        tileset_paths: list[Path] = typer.Argument(..., help="Path to images used as tiles. Eg: './assets/tiles/*.png' or './assets/tiles/a.png ./assets/tiles/n.png' ..."),
+        resize_factor: float = typer.Option(-1, help="Resize factor for reference image, so that the final image is not too big. Default: -1 (resizes based on tile size)"),
+        process_type: ProcessType = typer.Option(ProcessType.guvectorize, help="Type of processing to use. Default: guvectorize. njit IS not available for video")
+              ):
+
+    if process_type == ProcessType.njit:
+        rich.print(f"[red]Invalid process type[/red]: {ProcessType.njit} is not available for video processing. Please use {ProcessType.guvectorize} or {ProcessType.cuda} instead.")
+        return
+
+
+    pass

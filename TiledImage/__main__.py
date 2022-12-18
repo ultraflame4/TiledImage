@@ -1,10 +1,7 @@
 import os
 from pathlib import Path
 
-import numpy as np
 import typer
-import numba
-import enum
 
 from PIL import Image
 from rich.live import Live
@@ -13,22 +10,18 @@ from rich.table import Table
 
 import TiledImage
 import TiledImage.utils
+from TiledImage import video
+from TiledImage.utils import ProcessType
 
 
-class ProcessType(str, enum.Enum):
-    njit = "njit",
-    guvectorize = "guvectorize",
-    cuda = "cuda"
 
 
 def tiledImage_cli(
         reference_imagepath: Path = typer.Argument(..., help="Path to reference image"),
-        out_path: Path = typer.Argument(..., help="Path to save the final result to. ./out.png"),
+        out_path: Path = typer.Argument(..., help="Path to save the final result to. Eg ./out.png"),
         tileset_paths: list[Path] = typer.Argument(..., help="Path to images used as tiles. Eg: './assets/tiles/*.png' or './assets/tiles/a.png ./assets/tiles/n.png' ..."),
-        resize_factor: float = typer.Option(-1,
-                                            help="Resize factor for reference image, so that the final image is not too big. Default: -1 (resizes based on tile size)"),
-        process_type: ProcessType = typer.Option(ProcessType.guvectorize,
-                                                 help="Type of processing to use. Default: guvectorize. WARNING njit IS EXTREMELY SLOW"),
+        resize_factor: float = typer.Option(-1, help="Resize factor for reference image, so that the final image is not too big. Default: -1 (resizes based on tile size)"),
+        process_type: ProcessType = typer.Option(ProcessType.guvectorize, help="Type of processing to use. Default: guvectorize. WARNING njit IS EXTREMELY SLOW"),
 ):
     os.makedirs("./build/", exist_ok=True)
 
@@ -76,9 +69,14 @@ def tiledImage_cli(
 
 
 def main():
+    app = typer.Typer()
+    vidTyper = typer.Typer()
     print("# TiledImage version:", TiledImage.__version__)
+    app.command(name="img",help="Generates a tiled image using a reference image and a set of images as tiles")(tiledImage_cli)
 
-    typer.run(tiledImage_cli)
+    app.command(name="vid",help="Generates a tiled image video by converting all of its frames into a tiled image")(video.video_cli)
+
+    app()
 
 if __name__ == "__main__":
     main()

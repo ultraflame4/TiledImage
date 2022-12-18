@@ -1,3 +1,4 @@
+import enum
 import math
 import time
 from pathlib import Path
@@ -177,3 +178,9 @@ def manual_shape_correction(arr: np.ndarray):
         image[x:x + arr.shape[3], y:y + arr.shape[4], :] = arr[ix, iy, 3]
 
     return image
+
+
+class ProcessType(str, enum.Enum):
+    njit = "njit",
+    guvectorize = "guvectorize",
+    cuda = "cuda"
