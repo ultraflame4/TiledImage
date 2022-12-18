@@ -8,9 +8,9 @@ Check the [releases](https://github.com/ultraflame4/TiledImage/releases) page fo
 
 ### Image
 Generates a tiled image from a set of images and a reference image.
-Usage: `python -m TiledImage img [OPTIONS] REFERENCE_IMAGEPATH OUT_PATH`
+Usage: `timg img [OPTIONS] REFERENCE_IMAGEPATH OUT_PATH`
 
-Usage (Before v3.1.0): `python -m TiledImage REFERENCE_IMAGEPATH OUT_PATH`
+Usage (Before v3.1.0): `timg REFERENCE_IMAGEPATH OUT_PATH`
 #### Arguments / Parameters
 ##### Required Arguments
 - reference_imagepath: The path to the reference image which is used to determine the look of the final image 
@@ -30,7 +30,7 @@ Generates a video from a set of images and a reference video. Basically the vide
 This requires **ffmpeg to be installed** and to be **in the PATH!**
 If you don't have ffmpeg installed, you can download it [here](https://ffmpeg.org/download.html)
 
-Usage: `python -m TiledImage vid [OPTIONS] SOURCE_PATH SAVE_PATH TILESET_PATHS...`
+Usage: `timg vid [OPTIONS] SOURCE_PATH SAVE_PATH TILESET_PATHS...`
 
 ##### Required Arguments
 - source_path: The path to the reference image which is used to determine the look of the final image 
