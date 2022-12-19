@@ -67,6 +67,7 @@ def generate_tiledimage_video(reference_video: Video, tiles: np.ndarray, tile_sh
             return
 
     if progress:
+        progress.print(f"[yellow]Final video resolution: {tiles.shape[1] * reference_video.width * resize_factor} x {tiles.shape[0] * reference_video.height * resize_factor}[/yellow]")
         overallProcessTask = progress.add_task(f"Processing {reference_video.path.name} Frames",
                                                total=reference_video.TotalFramesCount)
 
@@ -151,7 +152,8 @@ def video_cli(
         tiles, tile_shape = TilImg.utils.load_imageset(Path(), "", tileset_paths, progress=overall_progress)
         overall_progress.advance(overall_progress_task, 1)
         video = TilImg.video.Video(source_path)
-        overall_progress.print(f"[yellow]Final video resolution: {tiles.shape[1]*video.width} x {tiles.shape[0]*video.height}")
+
+
         TilImg.video.generate_tiledimage_video(video, tiles, tile_shape, useCuda=useCuda,
                                                resize_factor=resize_factor, progress=overall_progress)
         overall_progress.advance(overall_progress_task, 1)

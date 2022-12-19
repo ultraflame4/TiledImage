@@ -128,7 +128,7 @@ def load_imageset(imageSetDirectory: Path, glob: str = "*.png", image_paths: Uni
         if progress:
             progress.update(task, description=f"Loading image set for tiles - {file.name}", advance=1)
     if progress:
-        progress.update(task, description=f"Loaded image set for tiles [Done]", advance=1)
+        progress.update(task, description=f"Loaded image set for tiles [Done]")
     return np.array(image_set), image_shape
 
 
