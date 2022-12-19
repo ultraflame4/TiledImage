@@ -17,7 +17,7 @@ def _tile_pixel_compare(refPixel: np.ndarray, tiles_avg: np.ndarray, out: int):
     # print("a",refPixel.shape)
     for t in tiles_avg:
 
-        distance = (refPixel[0] - t[0])**2+(refPixel[1] - t[1])**2+(refPixel[2] - t[2])**2
+        distance = (refPixel[0] - t[0])**2+(refPixel[1] - t[1])**2+(refPixel[2] - t[2])**2+(refPixel[3] - t[3])**2
 
         if nearest_distance == -1 or distance < nearest_distance:
             nearest_distance = distance
@@ -39,13 +39,13 @@ tile_pixel_compare_cuda= nb.guvectorize([(nb.uint8[:],
 
 def compute_tiles_avg(tiles: np.ndarray) -> np.ndarray:
     """
-    Computes the mean of each tile in the tiles array
+    Computes the average pixel of each tile in the tiles array
 
     :param tiles: A 4D numpy array representing the tiles. Aka, and array of images
     :return:
     """
 
-    return np.mean(tiles, axis=(1, 2))
+    return (np.mean(tiles, axis=(1, 2))+np.median(tiles, axis=(1, 2)))/2
 
 
 @nb.njit(fastmath=True, parallel=True)
@@ -158,13 +158,13 @@ def generate_tiledimage_gu(reference: np.ndarray, tiles: np.ndarray, tile_shape:
     clock.start()
 
     if progress:
-        avg_tiles_task = progress.add_task("[1/3] Computing tiles average (mean)...", total=1)
+        avg_tiles_task = progress.add_task("[1/3] Computing tiles average...", total=1)
         compare_task = progress.add_task("[2/3]. Comparing tiles and pixels...", total=1)
         draw_task = progress.add_task("[3/3]. Drawing final results ...", total=1)
 
     avg_tiles = compute_tiles_avg(tiles)
     if progress:
-        progress.update(avg_tiles_task, advance=1, description=f"[1/3] Completed Computing tiles average (mean) in {clock.getTimeSinceLast()}s")
+        progress.update(avg_tiles_task, advance=1, description=f"[1/3] Completed Computing tiles average in {clock.getTimeSinceLast()}s")
 
 
 
@@ -196,7 +196,7 @@ def generate_tiledimage(reference: np.ndarray, tiles: np.ndarray, tile_shape: tu
     clock.start()
 
 
-    print("[1/3]. Computing tiles average (mean)...")
+    print("[1/3]. Computing tiles average...")
     avg_vals = compute_tiles_avg(tiles)
     print("[1/3]. Completed in", clock.getTimeSinceLast(), "s")
 
