@@ -37,7 +37,8 @@ def tiledImage_cli(
                 return
 
         referenceImage = TilImg.utils.load_image(reference_imagepath, resize=resize_factor, progress=overall_progress)
-        overall_progress.print(f"[yellow]Final image resolution: {tiles.shape[1] * referenceImage.shape[1]} x {tiles.shape[0] * referenceImage.shape[0]}[/yellow]")
+
+        overall_progress.print(f"[yellow]Final image resolution: {tiles.shape[1] * referenceImage.shape[1] * resize_factor} x {tiles.shape[0] * referenceImage.shape[0] * resize_factor}[/yellow]")
         overall_progress.advance(overall_task)
 
         if process_type == ProcessType.njit:
